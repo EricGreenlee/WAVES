@@ -90,13 +90,29 @@ void setup() {
   if (readingCount >= 11) {
     //transmit
     uint64_t id;
-    int length = readingCount * 2;  //2 bytes per reading
+    int length = (readingCount * 2) + 1 + 7;  //2 bytes per reading, 1 for number of readings, 7 for full dateTime(can be reduced to hours, mins,ss)
     uint8_t data[length];
-    for (int i = 0; i < readingCount; i++) {  //pack the data array with 4 byte values 
-    //NEED TO DO PACKET ENCODING(NUMBER OF READINGS, [READINGS], TIME OF MOST RECENT READING)
-      data[i] = (readings[i] >> 8) & 0xff;
-      data[i + 1] = readings[i] & 0xff;
+    data[0] = readingCount & 0xff;
+    int j = 1;
+    for (int i = 0; i < readingCount; i++) {  //pack the data array with 2 byte values 
+    //PACKET ENCODING(NUMBER OF READINGS, [READINGS], TIME OF MOST RECENT READING)
+      data[j] = (readings[i] >> 8) & 0xff;
+      data[j + 1] = readings[i] & 0xff;
+      j += 2;
     }
+    data[j] = dateTime.DD;
+    j++;
+    data[j] = dateTime.MM;
+    j++;
+    data[j] = dateTime.YYYY >> 8;
+    j++;
+    data[j] = dateTime.YYYY & 0xff;
+    j++;
+    data[j] = dateTime.hh;
+    j++;
+    data[j] = dateTime.mm;
+    j++;
+    data[j] = dateTime.ss;
     Swarm_M138_Error_e transmit;
     transmit = mySwarm.transmitBinary(data, length, &id);
 
