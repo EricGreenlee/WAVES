@@ -6,6 +6,8 @@ swarmModem.h
 
 String getFullTime(int);
 
+float swarmGetVoltage();
+float swarmGetTemperature();
 void swarmSerialInit();
 void swarmGpsInit();
 void logReadingTime(int);

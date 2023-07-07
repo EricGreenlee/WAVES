@@ -25,6 +25,9 @@ void setup() {
 //Initialize SWARM Modem, Serial2
   swarmSerialInit();
 
+  Serial.println("Temperature: " + String(swarmGetTemperature()));
+  Serial.println("Voltage: " + String(swarmGetVoltage()));
+
 //Get GPS fix and current time
   swarmGpsInit();
 

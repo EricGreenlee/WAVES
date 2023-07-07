@@ -31,6 +31,36 @@ void swarmSerialInit(){
 
 }
 
+float swarmGetVoltage(){
+  float voltage;
+  Swarm_M138_Error_e err = mySwarm.getCPUvoltage(&voltage);
+  
+  if (err == SWARM_M138_SUCCESS) {
+    return voltage;
+  } else {
+    Serial.print(F("Swarm communication error: "));
+    Serial.print((int)err);
+    Serial.print(F(" : "));
+    Serial.println(mySwarm.modemErrorString(err)); // Convert the error into printable text
+    return -1;
+  }
+}
+
+float swarmGetTemperature(){
+  float temperature;
+  Swarm_M138_Error_e err = mySwarm.getTemperature(&temperature);
+  
+  if (err == SWARM_M138_SUCCESS) {
+    return temperature;
+  } else {
+    Serial.print(F("Swarm communication error: "));
+    Serial.print((int)err);
+    Serial.print(F(" : "));
+    Serial.println(mySwarm.modemErrorString(err)); // Convert the error into printable text
+    return -1;
+  }
+}
+
 void swarmGpsInit(){
 
   Swarm_M138_Error_e geo = mySwarm.getGeospatialInfo(&geoInfo);
@@ -68,7 +98,7 @@ void logReadingTime(int index){
 bool swarmTransmit(int numReadings){
 
   uint64_t id;
-  int length = (numReadings * 2) + 1 + 7;  //2 bytes per reading, 1 for number of readings, 7 for full dateTime(can be reduced to hours, mins,ss)
+  int length = (numReadings * 2) + 1 + 7;  //2 bytes per reading, 1 for number of readings, 7 for full dateTime(can be reduced to hours, mins,ss), 1 for temp, 1 for voltage
   uint8_t data[length];
   data[0] = numReadings & 0xff;
   int j = 1;
