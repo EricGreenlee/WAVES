@@ -9,6 +9,9 @@ Includes
 /*******************************************************
 swarmModem Code
 *******************************************************/
+#define MAX_VOLTAGE     10  //Volts
+#define MAX_TEMPERATURE 75  //Degrees C
+#define MIN_TEMPERATURE 0   //Degrees C
 
 SWARM_M138 mySwarm;
 
@@ -96,38 +99,54 @@ void logReadingTime(int index){
 }
 
 bool swarmTransmit(int numReadings){
+//PACKET ENCODING: {NUMBER OF READINGS, [READINGS], TIME OF MOST RECENT READING, CPU TEMPERATURE, CPU VOLTAGE}
+
+  // length: 1 byte for number of readings, 2 bytes per reading, 3 bytes for hours, mins, secs, 2 bytes for temp and voltage)
+  int length = 1 + (numReadings * 2) + 3 + 2;  
+  uint8_t data[length];
 
   uint64_t id;
-  int length = (numReadings * 2) + 1 + 7;  //2 bytes per reading, 1 for number of readings, 7 for full dateTime(can be reduced to hours, mins,ss), 1 for temp, 1 for voltage
-  uint8_t data[length];
   data[0] = numReadings & 0xff;
   int j = 1;
   for (int i = 0; i < numReadings; i++) {  //pack the data array with 2 byte values 
-  //PACKET ENCODING(NUMBER OF READINGS, [READINGS], TIME OF MOST RECENT READING)
     data[j] = (getReading(i) >> 8) & 0xff;
     data[j + 1] = getReading(i) & 0xff;
     j += 2;
   }
-  data[j] = dateTime.DD;
-  j++;
-  data[j] = dateTime.MM;
-  j++;
-  data[j] = dateTime.YYYY >> 8;
-  j++;
-  data[j] = dateTime.YYYY & 0xff;
-  j++;
   data[j] = dateTime.hh;
   j++;
   data[j] = dateTime.mm;
   j++;
   data[j] = dateTime.ss;
+  j++;
+
+  //Converts the returned temperature from a float to an int between 0-255 so it can be sent as 1 byte
+  //The 0-255 range is proportional to a temperature range of 0-75 degrees C 
+  float currentTemp = swarmGetTemperature();
+  int tempScalar;
+  if (currentTemp > MAX_TEMPERATURE){ tempScalar = 255; } else if (currentTemp < MIN_TEMPERATURE){ tempScalar = 0; }
+  else {
+    tempScalar = (int)(currentTemp*255.0/MAX_TEMPERATURE);
+  }
+  data[j] = tempScalar;
+  j++;
+
+  //Converts the returned voltage from a float to an int between 0-255 so it can be sent as 1 byte
+  //The 0-255 range is proportional to a voltage range of 0-10 V
+  float currentVolt = swarmGetVoltage();
+  int voltScalar;
+  if (currentVolt > MAX_VOLTAGE){ voltScalar = 255; } else if (currentVolt < 0){ voltScalar = 0; }
+  else {
+    voltScalar = (int)(currentVolt*255.0/MAX_VOLTAGE);
+  }
+  data[j] = voltScalar;
+
   Swarm_M138_Error_e transmit;
   transmit = mySwarm.transmitBinary(data, length, &id);
 
   if (transmit == SWARM_M138_SUCCESS) {
       Serial.print(F("The message has been added to the transmit queue. The message ID is "));
       serialPrintUint64_t(id);
-      Serial.println("**need to fix code here to print id**");
       return(true);
       //may want to change this later, for now we assume constant power to modem
       //so, if something is in the transmit queue it will eventually get sent
