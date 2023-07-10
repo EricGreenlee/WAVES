@@ -25,9 +25,6 @@ void setup() {
 //Initialize SWARM Modem, Serial2
   swarmSerialInit();
 
-  Serial.println("Temperature: " + String(swarmGetTemperature()));
-  Serial.println("Voltage: " + String(swarmGetVoltage()));
-
 //Get GPS fix and current time
   swarmGpsInit();
 
@@ -36,8 +33,8 @@ void setup() {
   logReadingTime(readingCount);
   readingCount++;
 
-//Check if Enough Readings Have Been Collected
-  if (readingCount >= 11) {
+//Transmit Readings Every Hour
+  if (readingCount >= 12) {
 
   //Attempt Data Transmission
     bool transmitSuccess = swarmTransmit(readingCount);
