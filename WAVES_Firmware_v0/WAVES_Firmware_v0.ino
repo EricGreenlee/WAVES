@@ -6,6 +6,8 @@
 #include "SD.h"
 #include "SPI.h"
 
+#define STAT_PIN 13
+
 #define uS_TO_S_FACTOR  1000000  /* Conversion factor for micro seconds to seconds */
 #define TIME_TO_SLEEP   60 * 5   /* Time ESP32 will go to sleep (in seconds) */
 
@@ -16,11 +18,16 @@ RTC_DATA_ATTR int readingCount = 0;
 
 void setup() {
 
+pinMode(STAT_PIN, OUTPUT);
+digitalWrite(STAT_PIN, HIGH);
+
 //General Setup and Increment Boot Count
   Serial.begin(115200);
   delay(1000);
   ++bootCount;
   Serial.println("Boot number: " + String(bootCount));
+
+digitalWrite(STAT_PIN, LOW);
 
 //Initialize SWARM Modem, Serial2
   swarmSerialInit();
