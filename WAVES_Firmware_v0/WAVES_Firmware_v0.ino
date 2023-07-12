@@ -34,7 +34,7 @@ void setup() {
   readingCount++;
 
 //Transmit Readings Every Hour
-  if (readingCount >= 12) {
+  if (bootCount ==1 || readingCount >= 12) {
 
   //Attempt Data Transmission
     bool transmitSuccess = swarmTransmit(readingCount);
